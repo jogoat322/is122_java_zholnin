@@ -163,7 +163,7 @@ public class GameView implements IGameView {
         alert.showAndWait();
     }
 
-    // "Скрываем" поле первого игрока (пустая сетка, кликабельно)
+    // "Скрываем" поле первого игрока (пустая сетка, кликабельно для Игрока 2)
     public void hidePlayer1Grid() {
         setupGrid(player1Grid, new int[10][10], true);
     }
@@ -217,8 +217,7 @@ public class GameView implements IGameView {
                     final int x = i;
                     final int y = j;
                     cell.setOnAction(e -> {
-                        gameController.handlePlayerMove(x, y); // Пока работает только для PvE
-                        updateGrid();
+                        gameController.handlePlayerMove(x, y);
                     });
                 } else if (board[i][j] == 1) {
                     cell.setStyle("-fx-background-color: black; -fx-font-size: 12;");

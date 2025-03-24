@@ -12,7 +12,7 @@ public class GameController implements IGameController {
     private Player player2;
     private Computer computer;
     private GameView gameView;
-    private boolean isPlayerTurn = true;
+    private boolean isPlayer1Turn = true; // Чей ход: true — Игрок 1, false — Игрок 2
     private final int[] shipSizes = {4, 3, 3, 2, 2, 2, 1, 1, 1, 1};
     private int currentShipIndex = 0;
     private boolean isPvPMode = false;
@@ -64,13 +64,13 @@ public class GameController implements IGameController {
                     if (isPvPMode && isFirstPlayerPlacing) {
                         isFirstPlayerPlacing = false;
                         currentShipIndex = 0;
-                        gameView.hidePlayer1Grid(); // "Скрываем" поле первого игрока
+                        gameView.hidePlayer1Grid();
                         gameView.switchToSecondPlayerPlacement();
                     } else if (isPvPMode && !isFirstPlayerPlacing) {
-                        gameView.hidePlayer2Grid(); // "Скрываем" оба поля после второго игрока
-                        gameView.showMessage("Расстановка завершена", "Оба поля готовы для игры.");
+                        gameView.hidePlayer2Grid();
+                        gameView.showMessage("Игра началась", "Ход Игрока 1!");
                     } else {
-                        gameView.startGame(); // PvE-режим
+                        gameView.startGame();
                     }
                 }
                 return true;
@@ -82,17 +82,40 @@ public class GameController implements IGameController {
     }
 
     public void handlePlayerMove(int x, int y) {
-        if (isPvPMode) {
-            showError("PvP-режим пока не поддерживает ходы!");
-            return;
-        }
-
         if (currentShipIndex < shipSizes.length) {
             showError("Сначала разместите все корабли!");
             return;
         }
 
-        if (isPlayerTurn) {
+        if (isPvPMode) {
+            // PvP-режим
+            Board targetBoard = isPlayer1Turn ? player2Board : player1Board; // Цель атаки
+            String currentPlayer = isPlayer1Turn ? "Игрок 1" : "Игрок 2";
+            String nextPlayer = isPlayer1Turn ? "Игрок 2" : "Игрок 1";
+
+            if (targetBoard.isCellAttacked(x, y)) {
+                showError("Вы уже стреляли в эту клетку!");
+                return;
+            }
+
+            boolean isHit = targetBoard.receiveAttack(x, y);
+            gameView.updateGrid();
+
+            // Проверка победы
+            if (targetBoard.areAllShipsSunk()) {
+                gameView.showMessage("Победа!", currentPlayer + " потопил все корабли противника!");
+                return;
+            }
+
+            // Переход хода
+            if (!isHit) {
+                isPlayer1Turn = !isPlayer1Turn;
+                gameView.showMessage("Промах", "Ход переходит к " + nextPlayer + "!");
+            } else {
+                gameView.showMessage("Попадание", currentPlayer + " стреляет снова!");
+            }
+        } else {
+            // PvE-режим
             if (player2Board.isCellAttacked(x, y)) {
                 showError("Вы уже стреляли в эту клетку!");
                 return;
@@ -107,7 +130,7 @@ public class GameController implements IGameController {
             }
 
             if (!isHit) {
-                isPlayerTurn = false;
+                isPlayer1Turn = false;
                 computer.makeMoveUntilMiss();
                 gameView.updateGrid();
 
@@ -116,7 +139,8 @@ public class GameController implements IGameController {
                     return;
                 }
 
-                isPlayerTurn = true;
+                isPlayer1Turn = true;
+                gameView.showMessage("Промах", "Ваш ход!");
             }
         }
     }
@@ -136,4 +160,8 @@ public class GameController implements IGameController {
     public boolean isFirstPlayerPlacing() {
         return isFirstPlayerPlacing;
     }
+    public boolean isPlayer1Turn() {
+        return isPlayer1Turn;
+    }
+
 }
