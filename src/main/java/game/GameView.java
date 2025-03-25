@@ -13,7 +13,7 @@ import javafx.stage.Stage;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.input.KeyCode;
-import javafx.scene.paint.Color;
+import javafx.scene.paint.Color; // Импортируем Color
 
 public class GameView implements IGameView {
     private final Stage primaryStage;
@@ -28,6 +28,14 @@ public class GameView implements IGameView {
     private boolean isPlacingShips = false;
     private int currentShipSize = -1;
     private boolean isVertical = false;
+
+    // Определяем цвета для состояний клеток
+    private static final Color EMPTY_CELL_COLOR = Color.WHITE;          // Пустая клетка
+    private static final Color SHIP_COLOR = Color.BLACK;               // Живой корабль
+    private static final Color HIT_COLOR = Color.RED;                  // Попадание
+    private static final Color MISS_COLOR = Color.BLUE;                // Промах
+    private static final Color SUNK_COLOR = Color.rgb(102, 0, 51); // Темный бордовый с фиолетовым оттенком           // Потопленный корабль (можно заменить на любой оттенок)
+    private static final Color PREVIEW_COLOR = Color.LIGHTGRAY;        // Предпросмотр размещения корабля
 
     public GameView(Stage primaryStage, Player player, Computer computer, GameController gameController) {
         this.primaryStage = primaryStage;
@@ -219,7 +227,9 @@ public class GameView implements IGameView {
                         gameController.handlePlayerMove(x, y);
                     });
                 } else if (board[i][j] == 1) {
-                    cell.setStyle("-fx-background-color: black; -fx-font-size: 12;");
+                    cell.setStyle(getColorStyle(SHIP_COLOR));
+                } else {
+                    cell.setStyle(getColorStyle(EMPTY_CELL_COLOR));
                 }
 
                 grid.add(cell, j, i);
@@ -260,21 +270,29 @@ public class GameView implements IGameView {
     private void updateCellStyle(Button cell, int cellState) {
         switch (cellState) {
             case 0: // Пустая клетка
-                cell.setStyle("-fx-background-color: white; -fx-font-size: 12;");
+                cell.setStyle(getColorStyle(EMPTY_CELL_COLOR));
                 break;
             case 1: // Корабль (живой)
-                cell.setStyle("-fx-background-color: black; -fx-font-size: 12;");
+                cell.setStyle(getColorStyle(SHIP_COLOR));
                 break;
             case 2: // Попадание
-                cell.setStyle("-fx-background-color: red; -fx-font-size: 12;");
+                cell.setStyle(getColorStyle(HIT_COLOR));
                 break;
             case 3: // Промах
-                cell.setStyle("-fx-background-color: blue; -fx-font-size: 12;");
+                cell.setStyle(getColorStyle(MISS_COLOR));
                 break;
-            case 4: // Потопленный корабль (бордовый цвет)
-                cell.setStyle("-fx-background-color: green; -fx-font-size: 12;");
+            case 4: // Потопленный корабль
+                cell.setStyle(getColorStyle(SUNK_COLOR));
                 break;
         }
+    }
+
+    // Метод для преобразования Color в стиль CSS
+    private String getColorStyle(Color color) {
+        return String.format("-fx-background-color: #%02X%02X%02X; -fx-font-size: 12;",
+                (int) (color.getRed() * 255),
+                (int) (color.getGreen() * 255),
+                (int) (color.getBlue() * 255));
     }
 
     private void showShipPreview(GridPane grid, int x, int y, int shipSize, boolean isVertical) {
@@ -286,9 +304,10 @@ public class GameView implements IGameView {
 
             if (previewX < 10 && previewY < 10) {
                 Button cell = (Button) grid.getChildren().get(previewX * 10 + previewY);
-                int cellState = (grid == player1Grid) ? player1.getBoard().getGrid()[previewX][previewY] : player2.getBoard().getGrid()[previewX][previewY];
+                int cellState = (grid == player1Grid) ? player1.getBoard().getGrid()[previewX][previewY]
+                        : player2.getBoard().getGrid()[previewX][previewY];
                 if (cellState == 0) {
-                    cell.setStyle("-fx-background-color: lightgray; -fx-font-size: 12;");
+                    cell.setStyle(getColorStyle(PREVIEW_COLOR));
                 }
             }
         }
@@ -299,9 +318,10 @@ public class GameView implements IGameView {
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
                 Button cell = (Button) grid.getChildren().get(i * 10 + j);
-                int cellState = (grid == player1Grid) ? player1.getBoard().getGrid()[i][j] : player2.getBoard().getGrid()[i][j];
+                int cellState = (grid == player1Grid) ? player1.getBoard().getGrid()[i][j]
+                        : player2.getBoard().getGrid()[i][j];
                 if (cellState == 0) {
-                    cell.setStyle("-fx-background-color: white; -fx-font-size: 12;");
+                    cell.setStyle(getColorStyle(EMPTY_CELL_COLOR));
                 }
             }
         }
@@ -311,9 +331,10 @@ public class GameView implements IGameView {
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
                 Button cell = (Button) grid.getChildren().get(i * 10 + j);
-                int cellState = (grid == player1Grid) ? player1.getBoard().getGrid()[i][j] : player2.getBoard().getGrid()[i][j];
+                int cellState = (grid == player1Grid) ? player1.getBoard().getGrid()[i][j]
+                        : player2.getBoard().getGrid()[i][j];
                 if (cellState == 0) {
-                    cell.setStyle("-fx-background-color: white; -fx-font-size: 12;");
+                    cell.setStyle(getColorStyle(EMPTY_CELL_COLOR));
                 }
             }
         }
