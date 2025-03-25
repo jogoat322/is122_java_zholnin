@@ -13,6 +13,7 @@ import javafx.stage.Stage;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.input.KeyCode;
+import javafx.scene.paint.Color;
 
 public class GameView implements IGameView {
     private final Stage primaryStage;
@@ -123,9 +124,9 @@ public class GameView implements IGameView {
                 Button cell = (Button) player1Grid.getChildren().get(i * 10 + j);
                 int cellState = player1.getBoard().getGrid()[i][j];
                 if (gameController.isFirstPlayerPlacing() || !gameController.isPvPMode()) {
-                    updateCellStyle(cell, cellState); // Показываем корабли во время расстановки первого игрока или в PvE
+                    updateCellStyle(cell, cellState);
                 } else {
-                    updateCellStyle(cell, cellState == 2 || cellState == 3 ? cellState : 0); // Скрываем корабли после расстановки
+                    updateCellStyle(cell, cellState == 2 || cellState == 3 || cellState == 4 ? cellState : 0);
                 }
             }
         }
@@ -135,11 +136,11 @@ public class GameView implements IGameView {
                 Button cell = (Button) player2Grid.getChildren().get(i * 10 + j);
                 int cellState = (player2 != null) ? player2.getBoard().getGrid()[i][j] : computer.getBoard().getGrid()[i][j];
                 if (gameController.isPvPMode() && gameController.isFirstPlayerPlacing()) {
-                    updateCellStyle(cell, 0); // Поле второго игрока пустое во время расстановки первого
+                    updateCellStyle(cell, 0);
                 } else if (gameController.isPvPMode() && !gameController.isFirstPlayerPlacing() && isPlacingShips) {
-                    updateCellStyle(cell, cellState); // Показываем корабли второго игрока во время его расстановки
+                    updateCellStyle(cell, cellState);
                 } else {
-                    updateCellStyle(cell, cellState == 2 || cellState == 3 ? cellState : 0); // Скрываем корабли после расстановки
+                    updateCellStyle(cell, cellState == 2 || cellState == 3 || cellState == 4 ? cellState : 0);
                 }
             }
         }
@@ -163,16 +164,14 @@ public class GameView implements IGameView {
         alert.showAndWait();
     }
 
-    // "Скрываем" поле первого игрока (пустая сетка, кликабельно для Игрока 2)
     public void hidePlayer1Grid() {
         setupGrid(player1Grid, new int[10][10], true);
     }
 
-    // "Скрываем" оба поля после второго игрока (пустые сетки, кликабельно)
     public void hidePlayer2Grid() {
         setupGrid(player1Grid, new int[10][10], true);
         setupGrid(player2Grid, new int[10][10], true);
-        isPlacingShips = false; // Завершаем стадию расстановки
+        isPlacingShips = false;
     }
 
     private GridPane addCoordinates(GridPane grid, boolean isPlayer) {
@@ -202,7 +201,7 @@ public class GameView implements IGameView {
     }
 
     private void setupGrid(GridPane grid, int[][] board, boolean isClickable) {
-        grid.getChildren().clear(); // Очищаем старую сетку
+        grid.getChildren().clear();
         grid.setHgap(2);
         grid.setVgap(2);
         grid.setPadding(new Insets(5));
@@ -260,17 +259,20 @@ public class GameView implements IGameView {
 
     private void updateCellStyle(Button cell, int cellState) {
         switch (cellState) {
-            case 0:
+            case 0: // Пустая клетка
                 cell.setStyle("-fx-background-color: white; -fx-font-size: 12;");
                 break;
-            case 1:
+            case 1: // Корабль (живой)
                 cell.setStyle("-fx-background-color: black; -fx-font-size: 12;");
                 break;
-            case 2:
+            case 2: // Попадание
                 cell.setStyle("-fx-background-color: red; -fx-font-size: 12;");
                 break;
-            case 3:
+            case 3: // Промах
                 cell.setStyle("-fx-background-color: blue; -fx-font-size: 12;");
+                break;
+            case 4: // Потопленный корабль (бордовый цвет)
+                cell.setStyle("-fx-background-color: green; -fx-font-size: 12;");
                 break;
         }
     }

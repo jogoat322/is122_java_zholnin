@@ -21,7 +21,7 @@ public class Ship implements IShip {
 
     public void hit() {
         size--;
-        if (size == 0) {
+        if (size <= 0) {
             isSunk = true;
         }
     }
