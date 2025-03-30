@@ -9,11 +9,11 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.input.KeyCode;
-import javafx.scene.paint.Color; // Импортируем Color
+import javafx.scene.paint.Color;
+import javafx.stage.Stage;
 
 public class GameView implements IGameView {
     private final Stage primaryStage;
@@ -25,17 +25,18 @@ public class GameView implements IGameView {
     private final GridPane player2Grid;
     private final Label player1Label;
     private final Label player2Label;
+    private final Label orientationLabel; // Новый Label для ориентации
     private boolean isPlacingShips = false;
     private int currentShipSize = -1;
     private boolean isVertical = false;
+    private boolean gameEnded = false;
 
-    // Определяем цвета для состояний клеток
-    private static final Color EMPTY_CELL_COLOR = Color.WHITE;          // Пустая клетка
-    private static final Color SHIP_COLOR = Color.BLACK;               // Живой корабль
-    private static final Color HIT_COLOR = Color.RED;                  // Попадание
-    private static final Color MISS_COLOR = Color.BLUE;                // Промах
-    private static final Color SUNK_COLOR = Color.rgb(102, 0, 51); // Темный бордовый с фиолетовым оттенком           // Потопленный корабль (можно заменить на любой оттенок)
-    private static final Color PREVIEW_COLOR = Color.LIGHTGRAY;        // Предпросмотр размещения корабля
+    private static final Color EMPTY_CELL_COLOR = Color.WHITE;
+    private static final Color SHIP_COLOR = Color.BLACK;
+    private static final Color HIT_COLOR = Color.RED;
+    private static final Color MISS_COLOR = Color.BLUE;
+    private static final Color SUNK_COLOR = Color.rgb(102, 0, 51);
+    private static final Color PREVIEW_COLOR = Color.LIGHTGRAY;
 
     public GameView(Stage primaryStage, Player player, Computer computer, GameController gameController) {
         this.primaryStage = primaryStage;
@@ -47,6 +48,7 @@ public class GameView implements IGameView {
         player2Grid = new GridPane();
         player1Label = new Label("Ваше поле:");
         player2Label = new Label("Поле компьютера:");
+        orientationLabel = new Label("Ориентация: Горизонтально"); // Изначально горизонтально
     }
 
     public GameView(Stage primaryStage, Player player1, Player player2, GameController gameController) {
@@ -59,6 +61,7 @@ public class GameView implements IGameView {
         player2Grid = new GridPane();
         player1Label = new Label("Поле Игрока 1:");
         player2Label = new Label("Поле Игрока 2:");
+        orientationLabel = new Label("Ориентация: Горизонтально"); // Изначально горизонтально
     }
 
     @Override
@@ -78,7 +81,13 @@ public class GameView implements IGameView {
         VBox player2Box = new VBox(10, player2Label, addCoordinates(player2Grid, false));
         hbox.getChildren().addAll(player1Box, player2Box);
 
-        Scene scene = new Scene(hbox, 1000, 500);
+        // Добавляем orientationLabel в нижнюю часть
+        VBox root = new VBox(20, hbox, orientationLabel);
+        root.setAlignment(Pos.CENTER);
+        root.setPadding(new Insets(10));
+
+        Scene scene = new Scene(root, 1000, 500);
+        primaryStage.setMaximized(true);
         primaryStage.setScene(scene);
         primaryStage.setTitle("Морской бой");
         primaryStage.show();
@@ -86,7 +95,7 @@ public class GameView implements IGameView {
         scene.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.Z && isPlacingShips) {
                 isVertical = !isVertical;
-                showMessage("Ориентация корабля", isVertical ? "Вертикально" : "Горизонтально");
+                orientationLabel.setText("Ориентация: " + (isVertical ? "Вертикально" : "Горизонтально")); // Обновляем текст
                 updateShipPreview();
             }
         });
@@ -96,6 +105,7 @@ public class GameView implements IGameView {
     public void startShipPlacement() {
         isPlacingShips = true;
         currentShipSize = gameController.getCurrentShipSize();
+        orientationLabel.setVisible(true); // Показываем надпись при расстановке
         if (gameController.isPvPMode()) {
             showMessage("Расстановка кораблей", "Игрок 1: Разместите ваши корабли на левом поле. Нажмите Z для изменения ориентации.");
             setupGridForShipPlacement(player1Grid);
@@ -119,19 +129,21 @@ public class GameView implements IGameView {
             return;
         }
         isPlacingShips = false;
+        orientationLabel.setVisible(false); // Скрываем надпись после расстановки
         if (!gameController.isPvPMode()) {
             setupGrid(player2Grid, new int[10][10], true);
             showMessage("Игра началась", "Ваш ход!");
         }
     }
 
+    // Остальные методы остаются без изменений, добавлю только один для примера
     @Override
     public void updateGrid() {
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
                 Button cell = (Button) player1Grid.getChildren().get(i * 10 + j);
                 int cellState = player1.getBoard().getGrid()[i][j];
-                if (gameController.isFirstPlayerPlacing() || !gameController.isPvPMode()) {
+                if (gameController.isFirstPlayerPlacing() || !gameController.isPvPMode() || gameEnded) {
                     updateCellStyle(cell, cellState);
                 } else {
                     updateCellStyle(cell, cellState == 2 || cellState == 3 || cellState == 4 ? cellState : 0);
@@ -146,6 +158,8 @@ public class GameView implements IGameView {
                 if (gameController.isPvPMode() && gameController.isFirstPlayerPlacing()) {
                     updateCellStyle(cell, 0);
                 } else if (gameController.isPvPMode() && !gameController.isFirstPlayerPlacing() && isPlacingShips) {
+                    updateCellStyle(cell, cellState);
+                } else if (gameEnded) {
                     updateCellStyle(cell, cellState);
                 } else {
                     updateCellStyle(cell, cellState == 2 || cellState == 3 || cellState == 4 ? cellState : 0);
@@ -180,6 +194,11 @@ public class GameView implements IGameView {
         setupGrid(player1Grid, new int[10][10], true);
         setupGrid(player2Grid, new int[10][10], true);
         isPlacingShips = false;
+    }
+
+    public void revealAllShips() {
+        gameEnded = true;
+        updateGrid();
     }
 
     private GridPane addCoordinates(GridPane grid, boolean isPlayer) {
@@ -269,25 +288,24 @@ public class GameView implements IGameView {
 
     private void updateCellStyle(Button cell, int cellState) {
         switch (cellState) {
-            case 0: // Пустая клетка
+            case 0:
                 cell.setStyle(getColorStyle(EMPTY_CELL_COLOR));
                 break;
-            case 1: // Корабль (живой)
+            case 1:
                 cell.setStyle(getColorStyle(SHIP_COLOR));
                 break;
-            case 2: // Попадание
+            case 2:
                 cell.setStyle(getColorStyle(HIT_COLOR));
                 break;
-            case 3: // Промах
+            case 3:
                 cell.setStyle(getColorStyle(MISS_COLOR));
                 break;
-            case 4: // Потопленный корабль
+            case 4:
                 cell.setStyle(getColorStyle(SUNK_COLOR));
                 break;
         }
     }
 
-    // Метод для преобразования Color в стиль CSS
     private String getColorStyle(Color color) {
         return String.format("-fx-background-color: #%02X%02X%02X; -fx-font-size: 12;",
                 (int) (color.getRed() * 255),

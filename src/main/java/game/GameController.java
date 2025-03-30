@@ -12,7 +12,7 @@ public class GameController implements IGameController {
     private Player player2;
     private Computer computer;
     private GameView gameView;
-    private boolean isPlayer1Turn = true; // Чей ход: true — Игрок 1, false — Игрок 2
+    private boolean isPlayer1Turn = true;
     private final int[] shipSizes = {4, 3, 3, 2, 2, 2, 1, 1, 1, 1};
     private int currentShipIndex = 0;
     private boolean isPvPMode = false;
@@ -89,7 +89,7 @@ public class GameController implements IGameController {
 
         if (isPvPMode) {
             // PvP-режим
-            Board targetBoard = isPlayer1Turn ? player2Board : player1Board; // Цель атаки
+            Board targetBoard = isPlayer1Turn ? player2Board : player1Board;
             String currentPlayer = isPlayer1Turn ? "Игрок 1" : "Игрок 2";
             String nextPlayer = isPlayer1Turn ? "Игрок 2" : "Игрок 1";
 
@@ -104,6 +104,7 @@ public class GameController implements IGameController {
             // Проверка победы
             if (targetBoard.areAllShipsSunk()) {
                 gameView.showMessage("Победа!", currentPlayer + " потопил все корабли противника!");
+                gameView.revealAllShips(); // Раскрываем оставшиеся корабли
                 return;
             }
 
@@ -126,6 +127,7 @@ public class GameController implements IGameController {
 
             if (player2Board.areAllShipsSunk()) {
                 gameView.showMessage("Победа!", "Вы потопили все корабли противника!");
+                gameView.revealAllShips(); // Раскрываем оставшиеся корабли
                 return;
             }
 
@@ -136,6 +138,7 @@ public class GameController implements IGameController {
 
                 if (player1Board.areAllShipsSunk()) {
                     gameView.showMessage("Поражение", "Все ваши корабли потоплены!");
+                    gameView.revealAllShips(); // Раскрываем оставшиеся корабли
                     return;
                 }
 
@@ -160,8 +163,8 @@ public class GameController implements IGameController {
     public boolean isFirstPlayerPlacing() {
         return isFirstPlayerPlacing;
     }
+
     public boolean isPlayer1Turn() {
         return isPlayer1Turn;
     }
-
 }

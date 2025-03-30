@@ -53,8 +53,8 @@ public class MainMenu implements IMainMenu {
 
         Scene scene = new Scene(root, 800, 600);
         primaryStage.setScene(scene);
-        primaryStage.setFullScreen(true);
         primaryStage.setTitle("Главное меню");
+        primaryStage.setFullScreen(true); // Устанавливаем полноэкранный режим для меню
         primaryStage.show();
     }
 
