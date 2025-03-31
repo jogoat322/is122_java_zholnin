@@ -9,9 +9,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.control.ListView;
 import javafx.stage.Stage;
-
 import java.io.File;
+import java.util.List;
 
 public class MainMenu implements IMainMenu {
     private final Stage primaryStage;
@@ -41,12 +42,17 @@ public class MainMenu implements IMainMenu {
         playButtonPvP.setStyle("-fx-font-size: 24px; -fx-background-color: #FF9800; -fx-text-fill: white;");
         playButtonPvP.setOnAction(e -> startGamePvP());
 
+        Button historyButton = new Button("История боев");
+        historyButton.setMinSize(300, 80);
+        historyButton.setStyle("-fx-font-size: 24px; -fx-background-color: #2196F3; -fx-text-fill: white;");
+        historyButton.setOnAction(e -> showBattleHistory());
+
         Button exitButton = new Button("Выйти");
         exitButton.setMinSize(300, 80);
         exitButton.setStyle("-fx-font-size: 24px; -fx-background-color: #f44336; -fx-text-fill: white;");
         exitButton.setOnAction(e -> primaryStage.close());
 
-        menuBox.getChildren().addAll(playButtonPvE, playButtonPvP, exitButton);
+        menuBox.getChildren().addAll(playButtonPvE, playButtonPvP, historyButton, exitButton);
 
         StackPane root = new StackPane();
         root.getChildren().addAll(backgroundView, menuBox);
@@ -54,7 +60,7 @@ public class MainMenu implements IMainMenu {
         Scene scene = new Scene(root, 800, 600);
         primaryStage.setScene(scene);
         primaryStage.setTitle("Главное меню");
-        primaryStage.setFullScreen(true); // Устанавливаем полноэкранный режим для меню
+        primaryStage.setFullScreen(true);
         primaryStage.show();
     }
 
@@ -66,5 +72,34 @@ public class MainMenu implements IMainMenu {
     private void startGamePvP() {
         GameController gameController = new GameController();
         gameController.startGame(primaryStage, true);
+    }
+
+    private void showBattleHistory() {
+        Stage historyStage = new Stage();
+        historyStage.setTitle("История боев");
+
+        ListView<String> historyList = new ListView<>();
+        List<BattleRecord> battles = DatabaseManager.getBattleHistory();
+
+        if (battles.isEmpty()) {
+            historyList.getItems().add("История боев пуста");
+        } else {
+            for (BattleRecord record : battles) {
+                historyList.getItems().add(record.toString());
+            }
+        }
+
+        Button backButton = new Button("Назад");
+        backButton.setStyle("-fx-font-size: 16px; -fx-background-color: #f44336; -fx-text-fill: white;");
+        backButton.setOnAction(e -> historyStage.close());
+
+        VBox historyBox = new VBox(20);
+        historyBox.setAlignment(javafx.geometry.Pos.CENTER);
+        historyBox.setPadding(new javafx.geometry.Insets(20));
+        historyBox.getChildren().addAll(historyList, backButton);
+
+        Scene historyScene = new Scene(historyBox, 600, 400);
+        historyStage.setScene(historyScene);
+        historyStage.show();
     }
 }

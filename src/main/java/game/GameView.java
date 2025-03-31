@@ -25,7 +25,7 @@ public class GameView implements IGameView {
     private final GridPane player2Grid;
     private final Label player1Label;
     private final Label player2Label;
-    private final Label orientationLabel; // Новый Label для ориентации
+    private final Label orientationLabel;
     private boolean isPlacingShips = false;
     private int currentShipSize = -1;
     private boolean isVertical = false;
@@ -48,7 +48,7 @@ public class GameView implements IGameView {
         player2Grid = new GridPane();
         player1Label = new Label("Ваше поле:");
         player2Label = new Label("Поле компьютера:");
-        orientationLabel = new Label("Ориентация: Горизонтально"); // Изначально горизонтально
+        orientationLabel = new Label("Ориентация: Горизонтально");
     }
 
     public GameView(Stage primaryStage, Player player1, Player player2, GameController gameController) {
@@ -61,7 +61,7 @@ public class GameView implements IGameView {
         player2Grid = new GridPane();
         player1Label = new Label("Поле Игрока 1:");
         player2Label = new Label("Поле Игрока 2:");
-        orientationLabel = new Label("Ориентация: Горизонтально"); // Изначально горизонтально
+        orientationLabel = new Label("Ориентация: Горизонтально");
     }
 
     @Override
@@ -79,7 +79,7 @@ public class GameView implements IGameView {
 
         VBox player1Box = new VBox(10, player1Label, addCoordinates(player1Grid, true));
         VBox player2Box = new VBox(10, player2Label, addCoordinates(player2Grid, false));
-        hbox.getChildren().addAll(player1Box, player2Box);
+        hbox.getChildren().addAll(player1Box, player2Box); // Убрана стрелка
 
         // Добавляем orientationLabel в нижнюю часть
         VBox root = new VBox(20, hbox, orientationLabel);
@@ -95,7 +95,7 @@ public class GameView implements IGameView {
         scene.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.Z && isPlacingShips) {
                 isVertical = !isVertical;
-                orientationLabel.setText("Ориентация: " + (isVertical ? "Вертикально" : "Горизонтально")); // Обновляем текст
+                orientationLabel.setText("Ориентация: " + (isVertical ? "Вертикально" : "Горизонтально"));
                 updateShipPreview();
             }
         });
@@ -105,7 +105,7 @@ public class GameView implements IGameView {
     public void startShipPlacement() {
         isPlacingShips = true;
         currentShipSize = gameController.getCurrentShipSize();
-        orientationLabel.setVisible(true); // Показываем надпись при расстановке
+        orientationLabel.setVisible(true);
         if (gameController.isPvPMode()) {
             showMessage("Расстановка кораблей", "Игрок 1: Разместите ваши корабли на левом поле. Нажмите Z для изменения ориентации.");
             setupGridForShipPlacement(player1Grid);
@@ -129,14 +129,13 @@ public class GameView implements IGameView {
             return;
         }
         isPlacingShips = false;
-        orientationLabel.setVisible(false); // Скрываем надпись после расстановки
+        orientationLabel.setVisible(false);
         if (!gameController.isPvPMode()) {
             setupGrid(player2Grid, new int[10][10], true);
             showMessage("Игра началась", "Ваш ход!");
         }
     }
 
-    // Остальные методы остаются без изменений, добавлю только один для примера
     @Override
     public void updateGrid() {
         for (int i = 0; i < 10; i++) {

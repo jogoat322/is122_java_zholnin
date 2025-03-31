@@ -4,6 +4,9 @@ import igame.IGameController;
 import javafx.stage.Stage;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.TextInputDialog;
+import java.sql.Timestamp;
+import java.util.Optional;
 
 public class GameController implements IGameController {
     private Board player1Board;
@@ -17,20 +20,31 @@ public class GameController implements IGameController {
     private int currentShipIndex = 0;
     private boolean isPvPMode = false;
     private boolean isFirstPlayerPlacing = true;
+    private String player1Name;
+    private String player2Name;
 
     public GameController() {
     }
 
+    @Override
     public void startGame(Stage primaryStage, boolean pvpMode) {
         isPvPMode = pvpMode;
+
+        // Ввод имени первого игрока
+        player1Name = getPlayerName("Введите имя Игрока 1", "Игрок 1");
+
         player1Board = new Board();
 
         if (isPvPMode) {
+            // Ввод имени второго игрока для PvP
+            player2Name = getPlayerName("Введите имя Игрока 2", "Игрок 2");
             player2Board = new Board();
             player1 = new Player(player1Board, player2Board);
             player2 = new Player(player2Board, player1Board);
             gameView = new GameView(primaryStage, player1, player2, this);
         } else {
+            // Для PvE второй игрок - компьютер
+            player2Name = "Компьютер";
             player2Board = new Board();
             player2Board.placeShipsRandomly();
             player1 = new Player(player1Board, player2Board);
@@ -42,6 +56,17 @@ public class GameController implements IGameController {
         gameView.startShipPlacement();
     }
 
+    private String getPlayerName(String title, String defaultName) {
+        TextInputDialog dialog = new TextInputDialog(defaultName);
+        dialog.setTitle(title);
+        dialog.setHeaderText(null);
+        dialog.setContentText("Введите имя игрока:");
+
+        Optional<String> result = dialog.showAndWait();
+        return result.filter(name -> !name.trim().isEmpty()).orElse(defaultName);
+    }
+
+    @Override
     public int getCurrentShipSize() {
         if (currentShipIndex < shipSizes.length) {
             return shipSizes[currentShipIndex];
@@ -49,6 +74,7 @@ public class GameController implements IGameController {
         return -1;
     }
 
+    @Override
     public boolean placePlayerShip(int x, int y, boolean isVertical) {
         if (currentShipIndex < shipSizes.length) {
             Ship ship = new Ship(shipSizes[currentShipIndex]);
@@ -68,7 +94,7 @@ public class GameController implements IGameController {
                         gameView.switchToSecondPlayerPlacement();
                     } else if (isPvPMode && !isFirstPlayerPlacing) {
                         gameView.hidePlayer2Grid();
-                        gameView.showMessage("Игра началась", "Ход Игрока 1!");
+                        gameView.showMessage("Игра началась", "Ход " + player1Name + "!");
                     } else {
                         gameView.startGame();
                     }
@@ -81,6 +107,7 @@ public class GameController implements IGameController {
         return false;
     }
 
+    @Override
     public void handlePlayerMove(int x, int y) {
         if (currentShipIndex < shipSizes.length) {
             showError("Сначала разместите все корабли!");
@@ -90,8 +117,8 @@ public class GameController implements IGameController {
         if (isPvPMode) {
             // PvP-режим
             Board targetBoard = isPlayer1Turn ? player2Board : player1Board;
-            String currentPlayer = isPlayer1Turn ? "Игрок 1" : "Игрок 2";
-            String nextPlayer = isPlayer1Turn ? "Игрок 2" : "Игрок 1";
+            String currentPlayer = isPlayer1Turn ? player1Name : player2Name;
+            String nextPlayer = isPlayer1Turn ? player2Name : player1Name;
 
             if (targetBoard.isCellAttacked(x, y)) {
                 showError("Вы уже стреляли в эту клетку!");
@@ -104,7 +131,8 @@ public class GameController implements IGameController {
             // Проверка победы
             if (targetBoard.areAllShipsSunk()) {
                 gameView.showMessage("Победа!", currentPlayer + " потопил все корабли противника!");
-                gameView.revealAllShips(); // Раскрываем оставшиеся корабли
+                gameView.revealAllShips();
+                saveBattleResult(currentPlayer);
                 return;
             }
 
@@ -126,8 +154,9 @@ public class GameController implements IGameController {
             gameView.updateGrid();
 
             if (player2Board.areAllShipsSunk()) {
-                gameView.showMessage("Победа!", "Вы потопили все корабли противника!");
-                gameView.revealAllShips(); // Раскрываем оставшиеся корабли
+                gameView.showMessage("Победа!", player1Name + " потопил все корабли противника!");
+                gameView.revealAllShips();
+                saveBattleResult(player1Name);
                 return;
             }
 
@@ -137,15 +166,23 @@ public class GameController implements IGameController {
                 gameView.updateGrid();
 
                 if (player1Board.areAllShipsSunk()) {
-                    gameView.showMessage("Поражение", "Все ваши корабли потоплены!");
-                    gameView.revealAllShips(); // Раскрываем оставшиеся корабли
+                    gameView.showMessage("Поражение", "Все корабли " + player1Name + " потоплены!");
+                    gameView.revealAllShips();
+                    saveBattleResult(player2Name);
                     return;
                 }
 
                 isPlayer1Turn = true;
-                gameView.showMessage("Промах", "Ваш ход!");
+                gameView.showMessage("Промах", "Ход " + player1Name + "!");
             }
         }
+    }
+
+    private void saveBattleResult(String winner) {
+        String gameMode = isPvPMode ? "PvP" : "PvE";
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+
+        DatabaseManager.saveGameResult(player1Name, player2Name, winner, gameMode, timestamp);
     }
 
     private void showError(String message) {
@@ -156,15 +193,26 @@ public class GameController implements IGameController {
         alert.showAndWait();
     }
 
+    @Override
     public boolean isPvPMode() {
         return isPvPMode;
     }
 
+    @Override
     public boolean isFirstPlayerPlacing() {
         return isFirstPlayerPlacing;
     }
 
     public boolean isPlayer1Turn() {
         return isPlayer1Turn;
+    }
+
+    // Добавляем геттеры для имен игроков (могут понадобиться в будущем)
+    public String getPlayer1Name() {
+        return player1Name;
+    }
+
+    public String getPlayer2Name() {
+        return player2Name;
     }
 }
