@@ -59,8 +59,11 @@ public class GameView implements IGameView {
         this.gameController = gameController;
         player1Grid = new GridPane();
         player2Grid = new GridPane();
-        player1Label = new Label("Поле Игрока 1:");
-        player2Label = new Label("Поле Игрока 2:");
+
+        player1Label = new Label("Поле " + gameController.getPlayer1Name() + ":");
+        player2Label = new Label("Поле " + gameController.getPlayer2Name() + ":");
+
+
         orientationLabel = new Label("Ориентация: Горизонтально");
     }
 

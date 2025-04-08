@@ -86,12 +86,12 @@ public class Board implements IBoard {
         if (isCellAttacked(x, y)) {
             return false;
         }
-        if (grid[x][y] == 1) { // Попадание по кораблю
-            grid[x][y] = 2; // Помечаем как попадание
-            checkIfShipSunk(x, y); // Проверяем, потоплен ли корабль
+        if (grid[x][y] == 1) {
+            grid[x][y] = 2;
+            checkIfShipSunk(x, y);
             return true;
-        } else if (grid[x][y] == 0) { // Промах
-            grid[x][y] = 3; // Помечаем как промах
+        } else if (grid[x][y] == 0) {
+            grid[x][y] = 3;
             return false;
         }
         return false;
@@ -171,5 +171,7 @@ public class Board implements IBoard {
     public int[][] getGrid() {
         return grid;
     }
+
+
 
 }
