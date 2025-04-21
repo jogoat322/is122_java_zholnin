@@ -30,6 +30,11 @@ public class GameController implements IGameController {
     public void startGame(Stage primaryStage, boolean pvpMode) {
         isPvPMode = pvpMode;
 
+        // Сброс состояния игры
+        currentShipIndex = 0;
+        isPlayer1Turn = true;
+        isFirstPlayerPlacing = true;
+
         // Ввод имени первого игрока
         player1Name = getPlayerName("Введите имя Игрока 1", "Игрок 1");
 
@@ -114,11 +119,24 @@ public class GameController implements IGameController {
             return;
         }
 
+        // Проверка завершения игры
+        if (gameView != null && gameView.isGameEnded()) {
+            showError("Игра завершена. Начните новую игру или выйдите.");
+            return;
+        }
+
         if (isPvPMode) {
             // PvP-режим
             Board targetBoard = isPlayer1Turn ? player2Board : player1Board;
+            Board ownBoard = isPlayer1Turn ? player1Board : player2Board;
             String currentPlayer = isPlayer1Turn ? player1Name : player2Name;
             String nextPlayer = isPlayer1Turn ? player2Name : player1Name;
+
+            // Проверка, что игрок не атакует собственное поле
+            if (ownBoard.isCellAttacked(x, y)) {
+                showError("Вы не можете атаковать собственное поле!");
+                return;
+            }
 
             if (targetBoard.isCellAttacked(x, y)) {
                 showError("Вы уже стреляли в эту клетку!");
@@ -130,9 +148,9 @@ public class GameController implements IGameController {
 
             // Проверка победы
             if (targetBoard.areAllShipsSunk()) {
+                gameView.revealAllShips(); // Раскрываем корабли сразу
+                saveBattleResult(currentPlayer); // Сохраняем результат
                 gameView.showMessage("Победа!", currentPlayer + " потопил все корабли противника!");
-                gameView.revealAllShips();
-                saveBattleResult(currentPlayer);
                 return;
             }
 
@@ -145,6 +163,11 @@ public class GameController implements IGameController {
             }
         } else {
             // PvE-режим
+            if (player1Board.isCellAttacked(x, y)) {
+                showError("Вы не можете атаковать собственное поле!");
+                return;
+            }
+
             if (player2Board.isCellAttacked(x, y)) {
                 showError("Вы уже стреляли в эту клетку!");
                 return;
@@ -154,9 +177,9 @@ public class GameController implements IGameController {
             gameView.updateGrid();
 
             if (player2Board.areAllShipsSunk()) {
+                gameView.revealAllShips(); // Раскрываем корабли сразу
+                saveBattleResult(player1Name); // Сохраняем результат
                 gameView.showMessage("Победа!", player1Name + " потопил все корабли противника!");
-                gameView.revealAllShips();
-                saveBattleResult(player1Name);
                 return;
             }
 
@@ -166,9 +189,9 @@ public class GameController implements IGameController {
                 gameView.updateGrid();
 
                 if (player1Board.areAllShipsSunk()) {
+                    gameView.revealAllShips(); // Раскрываем корабли сразу
+                    saveBattleResult(player2Name); // Сохраняем результат
                     gameView.showMessage("Поражение", "Все корабли " + player1Name + " потоплены!");
-                    gameView.revealAllShips();
-                    saveBattleResult(player2Name);
                     return;
                 }
 
@@ -207,12 +230,15 @@ public class GameController implements IGameController {
         return isPlayer1Turn;
     }
 
-    // Добавляем геттеры для имен игроков (могут понадобиться в будущем)
     public String getPlayer1Name() {
         return player1Name;
     }
 
     public String getPlayer2Name() {
         return player2Name;
+    }
+
+    public boolean isGameEnded() {
+        return gameView != null && gameView.isGameEnded();
     }
 }

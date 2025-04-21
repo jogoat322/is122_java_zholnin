@@ -11,6 +11,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -59,12 +60,14 @@ public class GameView implements IGameView {
         this.gameController = gameController;
         player1Grid = new GridPane();
         player2Grid = new GridPane();
-
         player1Label = new Label("Поле " + gameController.getPlayer1Name() + ":");
         player2Label = new Label("Поле " + gameController.getPlayer2Name() + ":");
-
-
         orientationLabel = new Label("Ориентация: Горизонтально");
+    }
+
+    // Добавляем метод для исправления ошибки
+    public boolean isGameEnded() {
+        return gameEnded;
     }
 
     @Override
@@ -82,9 +85,8 @@ public class GameView implements IGameView {
 
         VBox player1Box = new VBox(10, player1Label, addCoordinates(player1Grid, true));
         VBox player2Box = new VBox(10, player2Label, addCoordinates(player2Grid, false));
-        hbox.getChildren().addAll(player1Box, player2Box); // Убрана стрелка
+        hbox.getChildren().addAll(player1Box, player2Box);
 
-        // Добавляем orientationLabel в нижнюю часть
         VBox root = new VBox(20, hbox, orientationLabel);
         root.setAlignment(Pos.CENTER);
         root.setPadding(new Insets(10));
@@ -176,7 +178,23 @@ public class GameView implements IGameView {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
-        alert.showAndWait();
+
+        if (title.equals("Победа!") || title.equals("Поражение")) {
+            // Пользовательские кнопки для завершения игры
+            ButtonType playAgainButton = new ButtonType("Играть снова");
+            ButtonType exitButton = new ButtonType("Выйти");
+            alert.getButtonTypes().setAll(playAgainButton, exitButton);
+
+            alert.showAndWait().ifPresent(response -> {
+                if (response == playAgainButton) {
+                    returnToMainMenu();
+                } else if (response == exitButton) {
+                    primaryStage.close();
+                }
+            });
+        } else {
+            alert.showAndWait();
+        }
     }
 
     @Override
@@ -201,6 +219,36 @@ public class GameView implements IGameView {
     public void revealAllShips() {
         gameEnded = true;
         updateGrid();
+        disableGrids();
+    }
+
+    private void disableGrids() {
+        // Отключаем все кнопки в player1Grid
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++) {
+                Button cell = (Button) player1Grid.getChildren().get(i * 10 + j);
+                cell.setDisable(true);
+                cell.setOnAction(null); // Удаляем обработчики событий
+                cell.setOnMouseMoved(null); // Удаляем обработчики предварительного просмотра
+                cell.setOnMouseClicked(null);
+            }
+        }
+
+        // Отключаем все кнопки в player2Grid
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++) {
+                Button cell = (Button) player2Grid.getChildren().get(i * 10 + j);
+                cell.setDisable(true);
+                cell.setOnAction(null);
+                cell.setOnMouseMoved(null);
+                cell.setOnMouseClicked(null);
+            }
+        }
+    }
+
+    private void returnToMainMenu() {
+        MainMenu mainMenu = new MainMenu(primaryStage);
+        mainMenu.show();
     }
 
     private GridPane addCoordinates(GridPane grid, boolean isPlayer) {
@@ -241,7 +289,7 @@ public class GameView implements IGameView {
                 cell.setMinSize(30, 30);
                 cell.setMaxSize(30, 30);
 
-                if (isClickable) {
+                if (isClickable && !gameEnded) {
                     final int x = i;
                     final int y = j;
                     cell.setOnAction(e -> {
@@ -266,13 +314,13 @@ public class GameView implements IGameView {
                 final int y = j;
 
                 cell.setOnMouseMoved(e -> {
-                    if (isPlacingShips) {
+                    if (isPlacingShips && !gameEnded) {
                         showShipPreview(grid, x, y, currentShipSize, isVertical);
                     }
                 });
 
                 cell.setOnMouseClicked(e -> {
-                    if (isPlacingShips) {
+                    if (isPlacingShips && !gameEnded) {
                         if (gameController.placePlayerShip(x, y, isVertical)) {
                             currentShipSize = gameController.getCurrentShipSize();
                             if (currentShipSize == -1 && !gameController.isPvPMode()) {
