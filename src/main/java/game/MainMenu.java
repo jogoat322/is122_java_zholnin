@@ -3,8 +3,6 @@ package game;
 import igame.IMainMenu;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
@@ -32,24 +30,33 @@ public class MainMenu implements IMainMenu {
         VBox menuBox = new VBox(40);
         menuBox.setAlignment(javafx.geometry.Pos.CENTER);
 
-        Button playButtonPvE = new Button("Играть против компьютера");
+        // Общий стиль для всех кнопок
+        String buttonStyle = "-fx-font-size: 24px; " +
+                "-fx-background-color: white; " +
+                "-fx-text-fill: #2196F3; " +
+                "-fx-border-color: #2196F3; " +
+                "-fx-border-width: 2px; " +
+                "-fx-border-radius: 5px; " +
+                "-fx-background-radius: 5px;";
+
+        Button playButtonPvE = new Button("Играть против пк");
         playButtonPvE.setMinSize(300, 80);
-        playButtonPvE.setStyle("-fx-font-size: 24px; -fx-background-color: #4CAF50; -fx-text-fill: white;");
+        playButtonPvE.setStyle(buttonStyle);
         playButtonPvE.setOnAction(e -> startGamePvE());
 
         Button playButtonPvP = new Button("Играть против игрока");
         playButtonPvP.setMinSize(300, 80);
-        playButtonPvP.setStyle("-fx-font-size: 24px; -fx-background-color: #FF9800; -fx-text-fill: white;");
+        playButtonPvP.setStyle(buttonStyle);
         playButtonPvP.setOnAction(e -> startGamePvP());
 
         Button historyButton = new Button("История боев");
         historyButton.setMinSize(300, 80);
-        historyButton.setStyle("-fx-font-size: 24px; -fx-background-color: #2196F3; -fx-text-fill: white;");
+        historyButton.setStyle(buttonStyle);
         historyButton.setOnAction(e -> showBattleHistory());
 
         Button exitButton = new Button("Выйти");
         exitButton.setMinSize(300, 80);
-        exitButton.setStyle("-fx-font-size: 24px; -fx-background-color: #f44336; -fx-text-fill: white;");
+        exitButton.setStyle(buttonStyle);
         exitButton.setOnAction(e -> primaryStage.close());
 
         menuBox.getChildren().addAll(playButtonPvE, playButtonPvP, historyButton, exitButton);
@@ -89,8 +96,17 @@ public class MainMenu implements IMainMenu {
             }
         }
 
+        // Стиль для кнопки "Назад" в истории
+        String backButtonStyle = "-fx-font-size: 16px; " +
+                "-fx-background-color: white; " +
+                "-fx-text-fill: #2196F3; " +
+                "-fx-border-color: #2196F3; " +
+                "-fx-border-width: 2px; " +
+                "-fx-border-radius: 5px; " +
+                "-fx-background-radius: 5px;";
+
         Button backButton = new Button("Назад");
-        backButton.setStyle("-fx-font-size: 16px; -fx-background-color: #f44336; -fx-text-fill: white;");
+        backButton.setStyle(backButtonStyle);
         backButton.setOnAction(e -> historyStage.close());
 
         VBox historyBox = new VBox(20);
