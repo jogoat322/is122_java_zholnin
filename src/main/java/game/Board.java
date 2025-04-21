@@ -33,6 +33,16 @@ public class Board implements IBoard {
         }
     }
 
+    /**
+     * Проверяет, находятся ли координаты в пределах игрового поля
+     * @param x координата X
+     * @param y координата Y
+     * @return true, если координаты в пределах поля, иначе false
+     */
+    public boolean isCellWithinBounds(int x, int y) {
+        return x >= 0 && x < SIZE && y >= 0 && y < SIZE;
+    }
+
     public boolean isCellAttacked(int x, int y) {
         return grid[x][y] == 2 || grid[x][y] == 3 || grid[x][y] == 4;
     }
@@ -171,7 +181,7 @@ public class Board implements IBoard {
     public int[][] getGrid() {
         return grid;
     }
-
-
-
+    public int getSize() {
+        return SIZE;
+    }
 }

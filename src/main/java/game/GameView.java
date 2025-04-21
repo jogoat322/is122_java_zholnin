@@ -3,6 +3,8 @@ package game;
 import igame.IGameView;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -14,6 +16,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 public class GameView implements IGameView {
@@ -38,6 +41,9 @@ public class GameView implements IGameView {
     private static final Color MISS_COLOR = Color.BLUE;
     private static final Color SUNK_COLOR = Color.rgb(102, 0, 51);
     private static final Color PREVIEW_COLOR = Color.LIGHTGRAY;
+
+    private static final int PVP_PLAYER1_OFFSET = 0;
+    private static final int PVP_PLAYER2_OFFSET = 10;
 
     public GameView(Stage primaryStage, Player player, Computer computer, GameController gameController) {
         this.primaryStage = primaryStage;
@@ -65,7 +71,6 @@ public class GameView implements IGameView {
         orientationLabel = new Label("Ориентация: Горизонтально");
     }
 
-    // Добавляем метод для исправления ошибки
     public boolean isGameEnded() {
         return gameEnded;
     }
@@ -91,10 +96,11 @@ public class GameView implements IGameView {
         root.setAlignment(Pos.CENTER);
         root.setPadding(new Insets(10));
 
-        Scene scene = new Scene(root, 1000, 500);
-        primaryStage.setMaximized(true);
+        Rectangle2D screenBounds = Screen.getPrimary().getBounds();
+        Scene scene = new Scene(root, screenBounds.getWidth(), screenBounds.getHeight()); // Фиксированный размер окна
         primaryStage.setScene(scene);
         primaryStage.setTitle("Морской бой");
+        primaryStage.centerOnScreen(); // Центрируем окно
         primaryStage.show();
 
         scene.setOnKeyPressed(e -> {
@@ -180,7 +186,6 @@ public class GameView implements IGameView {
         alert.setContentText(message);
 
         if (title.equals("Победа!") || title.equals("Поражение")) {
-            // Пользовательские кнопки для завершения игры
             ButtonType playAgainButton = new ButtonType("Играть снова");
             ButtonType exitButton = new ButtonType("Выйти");
             alert.getButtonTypes().setAll(playAgainButton, exitButton);
@@ -223,18 +228,16 @@ public class GameView implements IGameView {
     }
 
     private void disableGrids() {
-        // Отключаем все кнопки в player1Grid
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
                 Button cell = (Button) player1Grid.getChildren().get(i * 10 + j);
                 cell.setDisable(true);
-                cell.setOnAction(null); // Удаляем обработчики событий
-                cell.setOnMouseMoved(null); // Удаляем обработчики предварительного просмотра
+                cell.setOnAction(null);
+                cell.setOnMouseMoved(null);
                 cell.setOnMouseClicked(null);
             }
         }
 
-        // Отключаем все кнопки в player2Grid
         for (int i = 0; i < 10; i++) {
             for (int j = 0; j < 10; j++) {
                 Button cell = (Button) player2Grid.getChildren().get(i * 10 + j);
@@ -405,6 +408,19 @@ public class GameView implements IGameView {
                     cell.setStyle(getColorStyle(EMPTY_CELL_COLOR));
                 }
             }
+        }
+    }
+    public void setPlayer1GridClickable(boolean clickable) {
+        // Реализация для игрового поля игрока 1
+        for (Node node : player1Grid.getChildren()) {
+            node.setMouseTransparent(!clickable);
+        }
+    }
+
+    public void setPlayer2GridClickable(boolean clickable) {
+        // Реализация для игрового поля игрока 2
+        for (Node node : player2Grid.getChildren()) {
+            node.setMouseTransparent(!clickable);
         }
     }
 }
