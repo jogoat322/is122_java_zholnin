@@ -19,6 +19,9 @@ import javafx.scene.paint.Color;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class GameView implements IGameView {
     private final Stage primaryStage;
     private final Player player1;
@@ -40,10 +43,9 @@ public class GameView implements IGameView {
     private static final Color HIT_COLOR = Color.RED;
     private static final Color MISS_COLOR = Color.BLUE;
     private static final Color SUNK_COLOR = Color.rgb(102, 0, 51);
-    private static final Color PREVIEW_COLOR = Color.LIGHTGRAY;
 
-    private static final int PVP_PLAYER1_OFFSET = 0;
-    private static final int PVP_PLAYER2_OFFSET = 10;
+
+
 
     public GameView(Stage primaryStage, Player player, Computer computer, GameController gameController) {
         this.primaryStage = primaryStage;
@@ -369,18 +371,99 @@ public class GameView implements IGameView {
     private void showShipPreview(GridPane grid, int x, int y, int shipSize, boolean isVertical) {
         clearPreview(grid);
 
+        boolean canPlace = true;
+        int[][] board = (grid == player1Grid) ? player1.getBoard().getGrid() : player2.getBoard().getGrid();
+
+        // 1. Проверяем возможность размещения
+        for (int i = 0; i < shipSize; i++) {
+            int previewX = x + (isVertical ? 0 : i);
+            int previewY = y + (isVertical ? i : 0);
+
+            if (previewX >= 10 || previewY >= 10) {
+                canPlace = false;
+                break;
+            }
+
+            if (board[previewX][previewY] != 0) {
+                canPlace = false;
+                // Не прерываем проверку, чтобы найти все занятые клетки
+            }
+
+            // Проверяем соседние клетки
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    int nx = previewX + dx;
+                    int ny = previewY + dy;
+                    if (nx >= 0 && nx < 10 && ny >= 0 && ny < 10 && board[nx][ny] != 0) {
+                        canPlace = false;
+                    }
+                }
+            }
+        }
+
+        Color borderColor = canPlace ? Color.LIGHTGREEN : Color.PINK;
+
+        // 2. Подсвечиваем только пустые клетки светло-серым
         for (int i = 0; i < shipSize; i++) {
             int previewX = x + (isVertical ? 0 : i);
             int previewY = y + (isVertical ? i : 0);
 
             if (previewX < 10 && previewY < 10) {
-                Button cell = (Button) grid.getChildren().get(previewX * 10 + previewY);
-                int cellState = (grid == player1Grid) ? player1.getBoard().getGrid()[previewX][previewY]
-                        : player2.getBoard().getGrid()[previewX][previewY];
-                if (cellState == 0) {
-                    cell.setStyle(getColorStyle(PREVIEW_COLOR));
+                Button shipCell = (Button) grid.getChildren().get(previewX * 10 + previewY);
+                // Подсвечиваем только пустые клетки
+                if (board[previewX][previewY] == 0) {
+                    shipCell.setStyle(getColorStyle(Color.LIGHTGRAY));
+                } else {
+                    // Для занятых клеток сохраняем их текущий стиль
+                    updateCellStyle(shipCell, board[previewX][previewY]);
                 }
             }
+        }
+
+        // 3. Подсвечиваем границу вокруг всего корабля (только пустые клетки)
+        Set<String> borderCells = new HashSet<>();
+
+        for (int i = 0; i < shipSize; i++) {
+            int shipX = x + (isVertical ? 0 : i);
+            int shipY = y + (isVertical ? i : 0);
+
+            if (shipX >= 10 || shipY >= 10) continue;
+
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    if (dx == 0 && dy == 0) continue;
+
+                    int borderX = shipX + dx;
+                    int borderY = shipY + dy;
+
+                    if (borderX >= 0 && borderX < 10 && borderY >= 0 && borderY < 10) {
+                        // Проверяем, что это не часть самого корабля
+                        boolean isShipCell = false;
+                        for (int j = 0; j < shipSize; j++) {
+                            int checkX = x + (isVertical ? 0 : j);
+                            int checkY = y + (isVertical ? j : 0);
+                            if (borderX == checkX && borderY == checkY) {
+                                isShipCell = true;
+                                break;
+                            }
+                        }
+
+                        if (!isShipCell && board[borderX][borderY] == 0) {
+                            borderCells.add(borderX + "," + borderY);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Подсвечиваем граничные клетки
+        for (String cell : borderCells) {
+            String[] coords = cell.split(",");
+            int bx = Integer.parseInt(coords[0]);
+            int by = Integer.parseInt(coords[1]);
+
+            Button borderCell = (Button) grid.getChildren().get(bx * 10 + by);
+            borderCell.setStyle(getColorStyle(borderColor));
         }
     }
 
