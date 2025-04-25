@@ -222,6 +222,10 @@ public class GameController implements IGameController {
 
         // Сохраняем запись
         record.save();
+
+        // Обновляем статистику игроков
+        String loser = winner.equals(player1Name) ? player2Name : player1Name;
+        DatabaseManager.updatePlayerStats(winner, loser);
     }
 
     private void showError(String message) {

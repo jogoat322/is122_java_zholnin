@@ -30,8 +30,6 @@ public class DatabaseManager {
             // Создаем директорию battlehistory, если она не существует
             Files.createDirectories(Paths.get("./battlehistory"));
 
-
-
             // Подключаемся к SQLite
             LOGGER.info("Подключение к базе данных SQLite: " + DB_URL);
             connection = DriverManager.getConnection(DB_URL);
@@ -40,7 +38,7 @@ public class DatabaseManager {
             LOGGER.info("База данных SQLite успешно инициализирована");
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Не удалось инициализировать базу данных SQLite", e);
-            throw new RuntimeException("Не удалось инициализировать базу данных SQLite", e);
+            throw new RuntimeException("Не удалось инициализировать базу данных SQLite()", e);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Ошибка при создании директории или удалении файла базы данных", e);
             throw new RuntimeException("Ошибка при создании директории или удалении файла базы данных", e);
@@ -48,22 +46,31 @@ public class DatabaseManager {
     }
 
     private static void createTableIfNotExists() throws SQLException {
-        String createTableSQL = """
-            CREATE TABLE IF NOT EXISTS battle_history (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                player1 TEXT,
-                player2 TEXT,
-                winner TEXT,
-                game_mode TEXT,
-                battle_date TIMESTAMP
-            )
-        """;
+        String createBattleHistoryTableSQL = """
+        CREATE TABLE IF NOT EXISTS battle_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            player1 TEXT,
+            player2 TEXT,
+            winner TEXT,
+            game_mode TEXT,
+            battle_date TIMESTAMP
+        )
+    """;
+
+        String createPlayerStatsTableSQL = """
+        CREATE TABLE IF NOT EXISTS player_stats (
+            player_name TEXT PRIMARY KEY,
+            wins INTEGER DEFAULT 0,
+            losses INTEGER DEFAULT 0
+        )
+    """;
 
         try (Statement stmt = connection.createStatement()) {
-            stmt.executeUpdate(createTableSQL);
-            LOGGER.info("Таблица BATTLE_HISTORY успешно создана");
+            stmt.executeUpdate(createBattleHistoryTableSQL);
+            stmt.executeUpdate(createPlayerStatsTableSQL);
+            LOGGER.info("Таблицы успешно созданы");
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Ошибка при создании таблицы BATTLE_HISTORY", e);
+            LOGGER.log(Level.SEVERE, "Ошибка при создании таблиц", e);
             throw e;
         }
     }
@@ -105,6 +112,26 @@ public class DatabaseManager {
         return history;
     }
 
+    public static List<PlayerStats> getPlayerStats() {
+        List<PlayerStats> stats = new ArrayList<>();
+        String sql = "SELECT player_name, wins, losses FROM player_stats ORDER BY wins DESC";
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                PlayerStats stat = new PlayerStats(
+                        rs.getString("player_name"),
+                        rs.getInt("wins"),
+                        rs.getInt("losses")
+                );
+                stats.add(stat);
+            }
+            LOGGER.fine("Статистика игроков успешно получена");
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Ошибка при получении статистики игроков", e);
+        }
+        return stats;
+    }
+
     public static void closeConnection() {
         try {
             if (connection != null && !connection.isClosed()) {
@@ -113,6 +140,67 @@ public class DatabaseManager {
             }
         } catch (SQLException e) {
             LOGGER.log(Level.WARNING, "Ошибка при закрытии соединения с базой данных", e);
+        }
+    }
+
+    public static void updatePlayerStats(String winner, String loser) {
+        // SQL для проверки существования записи
+        String selectSQL = "SELECT 1 FROM player_stats WHERE player_name = ?";
+        // SQL для вставки новой записи
+        String insertSQL = "INSERT INTO player_stats (player_name, wins, losses) VALUES (?, ?, ?)";
+        // SQL для обновления побед
+        String updateWinnerSQL = "UPDATE player_stats SET wins = wins + 1 WHERE player_name = ?";
+        // SQL для обновления поражений
+        String updateLoserSQL = "UPDATE player_stats SET losses = losses + 1 WHERE player_name = ?";
+
+        try {
+            // Обновляем статистику победителя
+            try (PreparedStatement selectStmt = connection.prepareStatement(selectSQL)) {
+                selectStmt.setString(1, winner);
+                ResultSet rs = selectStmt.executeQuery();
+                if (rs.next()) {
+                    // Игрок существует, обновляем победы
+                    try (PreparedStatement updateStmt = connection.prepareStatement(updateWinnerSQL)) {
+                        updateStmt.setString(1, winner);
+                        updateStmt.executeUpdate();
+                    }
+                } else {
+                    // Игрок не существует, вставляем новую запись
+                    try (PreparedStatement insertStmt = connection.prepareStatement(insertSQL)) {
+                        insertStmt.setString(1, winner);
+                        insertStmt.setInt(2, 1); // 1 победа
+                        insertStmt.setInt(3, 0); // 0 поражений
+                        insertStmt.executeUpdate();
+                    }
+                }
+            }
+
+            // Обновляем статистику проигравшего (если это не компьютер)
+            if (!loser.equals("Компьютер")) {
+                try (PreparedStatement selectStmt = connection.prepareStatement(selectSQL)) {
+                    selectStmt.setString(1, loser);
+                    ResultSet rs = selectStmt.executeQuery();
+                    if (rs.next()) {
+                        // Игрок существует, обновляем поражения
+                        try (PreparedStatement updateStmt = connection.prepareStatement(updateLoserSQL)) {
+                            updateStmt.setString(1, loser);
+                            updateStmt.executeUpdate();
+                        }
+                    } else {
+                        // Игрок не существует, вставляем новую запись
+                        try (PreparedStatement insertStmt = connection.prepareStatement(insertSQL)) {
+                            insertStmt.setString(1, loser);
+                            insertStmt.setInt(2, 0); // 0 побед
+                            insertStmt.setInt(3, 1); // 1 поражение
+                            insertStmt.executeUpdate();
+                        }
+                    }
+                }
+            }
+
+            LOGGER.fine("Статистика игроков обновлена");
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Ошибка при обновлении статистики игроков", e);
         }
     }
 }

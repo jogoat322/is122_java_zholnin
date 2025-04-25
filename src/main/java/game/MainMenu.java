@@ -57,12 +57,17 @@ public class MainMenu implements IMainMenu {
         historyButton.setStyle(buttonStyle);
         historyButton.setOnAction(e -> showBattleHistory());
 
+        Button statsButton = new Button("Статистика игроков");
+        statsButton.setMinSize(300, 80);
+        statsButton.setStyle(buttonStyle);
+        statsButton.setOnAction(e -> showPlayerStats());
+
         Button exitButton = new Button("Выйти");
         exitButton.setMinSize(300, 80);
         exitButton.setStyle(buttonStyle);
         exitButton.setOnAction(e -> primaryStage.close());
 
-        menuBox.getChildren().addAll(playButtonPvE, playButtonPvP, historyButton, exitButton);
+        menuBox.getChildren().addAll(playButtonPvE, playButtonPvP, historyButton, statsButton, exitButton);
 
         StackPane root = new StackPane();
         root.getChildren().addAll(backgroundView, menuBox);
@@ -141,5 +146,56 @@ public class MainMenu implements IMainMenu {
         Scene historyScene = new Scene(historyBox, 700, 500);
         historyStage.setScene(historyScene);
         historyStage.show();
+    }
+
+    private void showPlayerStats() {
+        Stage statsStage = new Stage();
+        statsStage.setTitle("Статистика игроков");
+
+        // Создаем TableView для отображения статистики игроков
+        TableView<PlayerStats> statsTable = new TableView<>();
+        statsTable.setPlaceholder(new javafx.scene.control.Label("Статистика игроков пуста"));
+
+        // Определяем колонки таблицы
+        TableColumn<PlayerStats, String> playerNameColumn = new TableColumn<>("Имя игрока");
+        playerNameColumn.setCellValueFactory(new PropertyValueFactory<>("playerName"));
+        playerNameColumn.setPrefWidth(200);
+
+        TableColumn<PlayerStats, Integer> winsColumn = new TableColumn<>("Победы");
+        winsColumn.setCellValueFactory(new PropertyValueFactory<>("wins"));
+        winsColumn.setPrefWidth(100);
+
+        TableColumn<PlayerStats, Integer> lossesColumn = new TableColumn<>("Поражения");
+        lossesColumn.setCellValueFactory(new PropertyValueFactory<>("losses"));
+        lossesColumn.setPrefWidth(100);
+
+        // Добавляем колонки в таблицу
+        statsTable.getColumns().addAll(playerNameColumn, winsColumn, lossesColumn);
+
+        // Заполняем таблицу данными
+        List<PlayerStats> stats = DatabaseManager.getPlayerStats();
+        statsTable.getItems().addAll(stats);
+
+        // Стиль для кнопки "Назад"
+        String backButtonStyle = "-fx-font-size: 16px; " +
+                "-fx-background-color: white; " +
+                "-fx-text-fill: #2196F3; " +
+                "-fx-border-color: #2196F3; " +
+                "-fx-border-width: 2px; " +
+                "-fx-border-radius: 5px; " +
+                "-fx-background-radius: 5px;";
+
+        Button backButton = new Button("Назад");
+        backButton.setStyle(backButtonStyle);
+        backButton.setOnAction(e -> statsStage.close());
+
+        VBox statsBox = new VBox(20);
+        statsBox.setAlignment(javafx.geometry.Pos.CENTER);
+        statsBox.setPadding(new javafx.geometry.Insets(20));
+        statsBox.getChildren().addAll(statsTable, backButton);
+
+        Scene statsScene = new Scene(statsBox, 500, 500);
+        statsStage.setScene(statsScene);
+        statsStage.show();
     }
 }
