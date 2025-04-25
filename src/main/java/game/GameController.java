@@ -211,7 +211,17 @@ public class GameController implements IGameController {
         String gameMode = isPvPMode ? "PvP" : "PvE";
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
 
-        DatabaseManager.saveGameResult(player1Name, player2Name, winner, gameMode, timestamp);
+        // Создаем новую запись боя
+        BattleRecord record = new BattleRecord(
+                player1Name,
+                player2Name,
+                winner,
+                gameMode,
+                timestamp
+        );
+
+        // Сохраняем запись
+        record.save();
     }
 
     private void showError(String message) {

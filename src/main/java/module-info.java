@@ -4,6 +4,10 @@ module org.example.sea_batl_30 {
     requires java.sql;
     requires java.desktop;
 
+
     opens org.example.sea_batl_30 to javafx.fxml;
     exports org.example.sea_batl_30;
+
+    opens game to javafx.base;
+    exports game;
 }

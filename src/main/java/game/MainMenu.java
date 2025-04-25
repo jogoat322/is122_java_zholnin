@@ -7,9 +7,12 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.control.ListView;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 import java.io.File;
+import java.sql.Timestamp;
 import java.util.List;
 
 public class MainMenu implements IMainMenu {
@@ -85,18 +88,39 @@ public class MainMenu implements IMainMenu {
         Stage historyStage = new Stage();
         historyStage.setTitle("История боев");
 
-        ListView<String> historyList = new ListView<>();
+        // Создаем TableView для отображения истории боев
+        TableView<BattleRecord> historyTable = new TableView<>();
+        historyTable.setPlaceholder(new javafx.scene.control.Label("История боев пуста"));
+
+        // Определяем колонки таблицы
+        TableColumn<BattleRecord, String> player1Column = new TableColumn<>("Игрок 1");
+        player1Column.setCellValueFactory(new PropertyValueFactory<>("player1"));
+        player1Column.setPrefWidth(150);
+
+        TableColumn<BattleRecord, String> player2Column = new TableColumn<>("Игрок 2");
+        player2Column.setCellValueFactory(new PropertyValueFactory<>("player2"));
+        player2Column.setPrefWidth(150);
+
+        TableColumn<BattleRecord, String> winnerColumn = new TableColumn<>("Победитель");
+        winnerColumn.setCellValueFactory(new PropertyValueFactory<>("winner"));
+        winnerColumn.setPrefWidth(150);
+
+        TableColumn<BattleRecord, String> gameModeColumn = new TableColumn<>("Режим игры");
+        gameModeColumn.setCellValueFactory(new PropertyValueFactory<>("gameMode"));
+        gameModeColumn.setPrefWidth(100);
+
+        TableColumn<BattleRecord, Timestamp> dateColumn = new TableColumn<>("Дата боя");
+        dateColumn.setCellValueFactory(new PropertyValueFactory<>("battleDate"));
+        dateColumn.setPrefWidth(150);
+
+        // Добавляем колонки в таблицу
+        historyTable.getColumns().addAll(player1Column, player2Column, winnerColumn, gameModeColumn, dateColumn);
+
+        // Заполняем таблицу данными
         List<BattleRecord> battles = DatabaseManager.getBattleHistory();
+        historyTable.getItems().addAll(battles);
 
-        if (battles.isEmpty()) {
-            historyList.getItems().add("История боев пуста");
-        } else {
-            for (BattleRecord record : battles) {
-                historyList.getItems().add(record.toString());
-            }
-        }
-
-        // Стиль для кнопки "Назад" в истории
+        // Стиль для кнопки "Назад"
         String backButtonStyle = "-fx-font-size: 16px; " +
                 "-fx-background-color: white; " +
                 "-fx-text-fill: #2196F3; " +
@@ -112,9 +136,9 @@ public class MainMenu implements IMainMenu {
         VBox historyBox = new VBox(20);
         historyBox.setAlignment(javafx.geometry.Pos.CENTER);
         historyBox.setPadding(new javafx.geometry.Insets(20));
-        historyBox.getChildren().addAll(historyList, backButton);
+        historyBox.getChildren().addAll(historyTable, backButton);
 
-        Scene historyScene = new Scene(historyBox, 600, 400);
+        Scene historyScene = new Scene(historyBox, 700, 500);
         historyStage.setScene(historyScene);
         historyStage.show();
     }
