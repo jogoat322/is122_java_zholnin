@@ -1,6 +1,8 @@
 package game;
 
 import igame.IMainMenu;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
@@ -31,50 +33,48 @@ public class MainMenu implements IMainMenu {
         backgroundView.setPreserveRatio(false);
 
         VBox menuBox = new VBox(40);
-        menuBox.setAlignment(javafx.geometry.Pos.CENTER);
+        menuBox.setAlignment(Pos.CENTER);
+        menuBox.setPadding(new Insets(50));
 
         // Общий стиль для всех кнопок
         String buttonStyle = "-fx-font-size: 24px; " +
-                "-fx-background-color: white; " +
-                "-fx-text-fill: #2196F3; " +
-                "-fx-border-color: #2196F3; " +
+                "-fx-background-color: linear-gradient(to bottom, #ffffff, #e6e6e6); " +
+                "-fx-text-fill: #1e88e5; " +
+                "-fx-border-color: #1e88e5; " +
                 "-fx-border-width: 2px; " +
-                "-fx-border-radius: 5px; " +
-                "-fx-background-radius: 5px;";
+                "-fx-border-radius: 10px; " +
+                "-fx-background-radius: 10px; " +
+                "-fx-padding: 15px 30px; " +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 5, 0, 0, 2);";
 
-        Button playButtonPvE = new Button("Играть против пк");
-        playButtonPvE.setMinSize(300, 80);
+        Button playButtonPvE = new Button("Играть против компьютера");
+        playButtonPvE.setMinSize(350, 80);
         playButtonPvE.setStyle(buttonStyle);
         playButtonPvE.setOnAction(e -> startGamePvE());
 
         Button playButtonPvP = new Button("Играть против игрока");
-        playButtonPvP.setMinSize(300, 80);
+        playButtonPvP.setMinSize(350, 80);
         playButtonPvP.setStyle(buttonStyle);
         playButtonPvP.setOnAction(e -> startGamePvP());
 
-        Button historyButton = new Button("История боев");
-        historyButton.setMinSize(300, 80);
-        historyButton.setStyle(buttonStyle);
-        historyButton.setOnAction(e -> showBattleHistory());
-
-        Button statsButton = new Button("Статистика игроков");
-        statsButton.setMinSize(300, 80);
+        Button statsButton = new Button("Статистика");
+        statsButton.setMinSize(350, 80);
         statsButton.setStyle(buttonStyle);
-        statsButton.setOnAction(e -> showPlayerStats());
+        statsButton.setOnAction(e -> showStatsMenu());
 
         Button exitButton = new Button("Выйти");
-        exitButton.setMinSize(300, 80);
+        exitButton.setMinSize(350, 80);
         exitButton.setStyle(buttonStyle);
         exitButton.setOnAction(e -> primaryStage.close());
 
-        menuBox.getChildren().addAll(playButtonPvE, playButtonPvP, historyButton, statsButton, exitButton);
+        menuBox.getChildren().addAll(playButtonPvE, playButtonPvP, statsButton, exitButton);
 
         StackPane root = new StackPane();
         root.getChildren().addAll(backgroundView, menuBox);
 
         Scene scene = new Scene(root, 800, 600);
         primaryStage.setScene(scene);
-        primaryStage.setTitle("Главное меню");
+        primaryStage.setTitle("Морской бой - Главное меню");
         primaryStage.setFullScreen(true);
         primaryStage.show();
     }
@@ -87,6 +87,54 @@ public class MainMenu implements IMainMenu {
     private void startGamePvP() {
         GameController gameController = new GameController();
         gameController.startGame(primaryStage, true);
+    }
+
+    private void showStatsMenu() {
+        Stage statsStage = new Stage();
+        statsStage.setTitle("Статистика");
+
+        VBox statsBox = new VBox(30);
+        statsBox.setAlignment(Pos.CENTER);
+        statsBox.setPadding(new Insets(40));
+
+        // Стиль для кнопок в меню статистики
+        String statsButtonStyle = "-fx-font-size: 20px; " +
+                "-fx-background-color: linear-gradient(to bottom, #ffffff, #e6e6e6); " +
+                "-fx-text-fill: #1e88e5; " +
+                "-fx-border-color: #1e88e5; " +
+                "-fx-border-width: 2px; " +
+                "-fx-border-radius: 8px; " +
+                "-fx-background-radius: 8px; " +
+                "-fx-padding: 12px 25px; " +
+                "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 1);";
+
+        Button historyButton = new Button("История боев");
+        historyButton.setMinSize(250, 60);
+        historyButton.setStyle(statsButtonStyle);
+        historyButton.setOnAction(e -> {
+            statsStage.close();
+            showBattleHistory();
+        });
+
+        Button playerStatsButton = new Button("Статистика игроков");
+        playerStatsButton.setMinSize(250, 60);
+        playerStatsButton.setStyle(statsButtonStyle);
+        playerStatsButton.setOnAction(e -> {
+            statsStage.close();
+            showPlayerStats();
+        });
+
+        Button backButton = new Button("Назад");
+        backButton.setMinSize(250, 60);
+        backButton.setStyle(statsButtonStyle);
+        backButton.setOnAction(e -> statsStage.close());
+
+        statsBox.getChildren().addAll(historyButton, playerStatsButton, backButton);
+
+        Scene statsScene = new Scene(statsBox, 400, 400);
+        statsStage.setScene(statsScene);
+        statsStage.centerOnScreen();
+        statsStage.show();
     }
 
     private void showBattleHistory() {
@@ -127,24 +175,26 @@ public class MainMenu implements IMainMenu {
 
         // Стиль для кнопки "Назад"
         String backButtonStyle = "-fx-font-size: 16px; " +
-                "-fx-background-color: white; " +
-                "-fx-text-fill: #2196F3; " +
-                "-fx-border-color: #2196F3; " +
+                "-fx-background-color: linear-gradient(to bottom, #ffffff, #e6e6e6); " +
+                "-fx-text-fill: #1e88e5; " +
+                "-fx-border-color: #1e88e5; " +
                 "-fx-border-width: 2px; " +
-                "-fx-border-radius: 5px; " +
-                "-fx-background-radius: 5px;";
+                "-fx-border-radius: 8px; " +
+                "-fx-background-radius: 8px; " +
+                "-fx-padding: 10px 20px;";
 
         Button backButton = new Button("Назад");
         backButton.setStyle(backButtonStyle);
         backButton.setOnAction(e -> historyStage.close());
 
         VBox historyBox = new VBox(20);
-        historyBox.setAlignment(javafx.geometry.Pos.CENTER);
-        historyBox.setPadding(new javafx.geometry.Insets(20));
+        historyBox.setAlignment(Pos.CENTER);
+        historyBox.setPadding(new Insets(20));
         historyBox.getChildren().addAll(historyTable, backButton);
 
         Scene historyScene = new Scene(historyBox, 700, 500);
         historyStage.setScene(historyScene);
+        historyStage.centerOnScreen();
         historyStage.show();
     }
 
@@ -178,24 +228,26 @@ public class MainMenu implements IMainMenu {
 
         // Стиль для кнопки "Назад"
         String backButtonStyle = "-fx-font-size: 16px; " +
-                "-fx-background-color: white; " +
-                "-fx-text-fill: #2196F3; " +
-                "-fx-border-color: #2196F3; " +
+                "-fx-background-color: linear-gradient(to bottom, #ffffff, #e6e6e6); " +
+                "-fx-text-fill: #1e88e5; " +
+                "-fx-border-color: #1e88e5; " +
                 "-fx-border-width: 2px; " +
-                "-fx-border-radius: 5px; " +
-                "-fx-background-radius: 5px;";
+                "-fx-border-radius: 8px; " +
+                "-fx-background-radius: 8px; " +
+                "-fx-padding: 10px 20px;";
 
         Button backButton = new Button("Назад");
         backButton.setStyle(backButtonStyle);
         backButton.setOnAction(e -> statsStage.close());
 
         VBox statsBox = new VBox(20);
-        statsBox.setAlignment(javafx.geometry.Pos.CENTER);
-        statsBox.setPadding(new javafx.geometry.Insets(20));
+        statsBox.setAlignment(Pos.CENTER);
+        statsBox.setPadding(new Insets(20));
         statsBox.getChildren().addAll(statsTable, backButton);
 
         Scene statsScene = new Scene(statsBox, 500, 500);
         statsStage.setScene(statsScene);
+        statsStage.centerOnScreen();
         statsStage.show();
     }
 }

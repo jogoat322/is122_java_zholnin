@@ -99,9 +99,15 @@ public class GameController implements IGameController {
                         currentShipIndex = 0;
                         gameView.hidePlayer1Grid();
                         gameView.switchToSecondPlayerPlacement();
+                        // Обновляем кликабельность полей
+                        gameView.setPlayer1GridClickable(false);
+                        gameView.setPlayer2GridClickable(true);
                     } else if (isPvPMode && !isFirstPlayerPlacing) {
                         gameView.hidePlayer2Grid();
                         gameView.showMessage("Игра началась", "Ход " + player1Name + "!");
+                        // Обновляем кликабельность полей для первого хода
+                        gameView.setPlayer1GridClickable(false);
+                        gameView.setPlayer2GridClickable(true);
                     } else {
                         gameView.startGame();
                     }
