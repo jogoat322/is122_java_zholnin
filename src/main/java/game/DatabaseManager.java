@@ -32,6 +32,7 @@ public class DatabaseManager {
 
             // Подключаемся к SQLite
             LOGGER.info("Подключение к базе данных SQLite: " + DB_URL);
+            // Метод getConnection создает базу данных если ее нет или же подключается к сущствующей
             connection = DriverManager.getConnection(DB_URL);
             connection.setAutoCommit(true);
             createTableIfNotExists();
@@ -132,16 +133,7 @@ public class DatabaseManager {
         return stats;
     }
 
-    public static void closeConnection() {
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
-                LOGGER.info("Соединение с базой данных закрыто");
-            }
-        } catch (SQLException e) {
-            LOGGER.log(Level.WARNING, "Ошибка при закрытии соединения с базой данных", e);
-        }
-    }
+
 
     public static void updatePlayerStats(String winner, String loser) {
         // SQL для проверки существования записи
